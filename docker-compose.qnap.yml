@@ -1,0 +1,114 @@
+# QNAP Container Station - Docker Compose
+# Versione ottimizzata per QNAP senza dipendenze da file .env
+# IMPORTANTE: Modifica i valori delle variabili d'ambiente prima del deploy!
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: investment_db
+    restart: unless-stopped
+    environment:
+      # MODIFICA QUESTI VALORI
+      POSTGRES_USER: investmentuser
+      POSTGRES_PASSWORD: CHANGE_ME_STRONG_PASSWORD
+      POSTGRES_DB: investments
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - investment_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U investmentuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: investment_backend
+    restart: unless-stopped
+    environment:
+      # MODIFICA QUESTI VALORI
+      # Usa la stessa password del database sopra
+      DATABASE_URL: postgresql://investmentuser:CHANGE_ME_STRONG_PASSWORD@db:5432/investments
+
+      # Genera con: openssl rand -hex 32
+      SECRET_KEY: CHANGE_ME_GENERATE_RANDOM_32_CHARS
+
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+      # Sostituisci 192.168.1.100 con l'IP del tuo NAS
+      BACKEND_CORS_ORIGINS: http://localhost:3000,http://192.168.1.100:3000
+
+      # API Keys opzionali (lascia "demo" per iniziare)
+      ALPHA_VANTAGE_API_KEY: demo
+      TWELVE_DATA_API_KEY: demo
+
+      # Backup
+      BACKUP_ENABLED: true
+      BACKUP_RETENTION_DAYS: 30
+      BACKUP_ENCRYPTION_KEY: CHANGE_ME_BACKUP_KEY
+
+      # App Settings
+      APP_NAME: Investment Tracker
+      APP_VERSION: 1.0.0
+      ENVIRONMENT: production
+      DEBUG: false
+
+      # Price Updates
+      PRICE_UPDATE_INTERVAL_MINUTES: 15
+      PRICE_UPDATE_ENABLED: true
+    volumes:
+      - ./backend:/app
+      - ./backups:/app/backups
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - investment_network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  frontend:
+    build: ./frontend
+    container_name: investment_frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      # MODIFICA: Sostituisci con l'IP del tuo NAS
+      REACT_APP_API_URL: http://192.168.1.100:8000
+    networks:
+      - investment_network
+    command: npm start
+
+  nginx:
+    build: ./nginx
+    container_name: investment_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - investment_network
+
+volumes:
+  postgres_data:
+
+networks:
+  investment_network:
+    driver: bridge

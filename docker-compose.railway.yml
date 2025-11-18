@@ -1,0 +1,53 @@
+# Railway.app - Docker Compose
+# Versione ottimizzata per Railway deployment
+# Railway gestisce automaticamente DATABASE_URL per PostgreSQL
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # Railway fornisce automaticamente DATABASE_URL se aggiungi PostgreSQL
+      # DATABASE_URL: ${{ Postgres.DATABASE_URL }}
+
+      # Configura queste variabili in Railway Dashboard
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+      # Railway auto-genera l'URL del frontend, aggiornalo dopo il primo deploy
+      BACKEND_CORS_ORIGINS: ${FRONTEND_URL:-http://localhost:3000}
+
+      # API Keys (configura in Railway)
+      ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY:-demo}
+      TWELVE_DATA_API_KEY: ${TWELVE_DATA_API_KEY:-demo}
+
+      # Backup (Railway ha storage effimero, considera S3 per backup)
+      BACKUP_ENABLED: false
+      BACKUP_RETENTION_DAYS: 7
+
+      # App Settings
+      APP_NAME: Investment Tracker
+      APP_VERSION: 1.0.0
+      ENVIRONMENT: production
+      DEBUG: false
+
+      # Price Updates
+      PRICE_UPDATE_INTERVAL_MINUTES: 15
+      PRICE_UPDATE_ENABLED: true
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.railway
+    restart: unless-stopped
+    environment:
+      # Aggiorna con l'URL del backend Railway dopo il primo deploy
+      REACT_APP_API_URL: ${BACKEND_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"

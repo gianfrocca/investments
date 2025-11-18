@@ -1,0 +1,86 @@
+# VPS Production - Docker Compose
+# Versione per server VPS (DigitalOcean, Linode, Hetzner, AWS EC2, etc.)
+# Usa file .env per le variabili sensibili
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: investment_db
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    networks:
+      - investment_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Non esporre porta 5432 all'esterno per sicurezza
+    # ports:
+    #   - "5432:5432"
+
+  backend:
+    build: ./backend
+    container_name: investment_backend
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./backups:/app/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - investment_network
+    # Non esporre porta 8000, usa nginx come proxy
+    # ports:
+    #   - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.production
+    container_name: investment_frontend
+    restart: always
+    networks:
+      - investment_network
+    # Non esporre porta 3000, usa nginx
+
+  nginx:
+    build: ./nginx
+    container_name: investment_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - investment_network
+
+  # Servizio per rinnovo automatico certificati SSL
+  certbot:
+    image: certbot/certbot
+    container_name: investment_certbot
+    restart: unless-stopped
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  investment_network:
+    driver: bridge
