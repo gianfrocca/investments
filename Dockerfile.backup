@@ -1,0 +1,15 @@
+FROM postgres:15-alpine
+
+WORKDIR /scripts
+
+# Copy backup scripts
+COPY scripts/backup.sh .
+COPY scripts/restore.sh .
+
+# Make scripts executable
+RUN chmod +x backup.sh restore.sh
+
+# Create backup directory
+RUN mkdir -p /backups && chmod 777 /backups
+
+ENTRYPOINT ["/scripts/backup.sh"]

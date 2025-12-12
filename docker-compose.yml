@@ -61,16 +61,16 @@ services:
 
   # Backup service
   backup:
-    image: postgres:15-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.backup
     container_name: investment_backup
     env_file:
       - .env
     volumes:
       - ./backups:/backups
-      - ./scripts:/scripts
     networks:
       - investment_network
-    entrypoint: /scripts/backup.sh
     depends_on:
       - db
 
