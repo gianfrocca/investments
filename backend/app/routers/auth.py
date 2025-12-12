@@ -8,6 +8,7 @@ from app.models.user import User
 from app.schemas.user import UserCreate, User as UserSchema, Token
 from app.utils.security import verify_password, get_password_hash, create_access_token
 from app.config import settings
+from app.utils.auth import get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 
@@ -83,5 +84,4 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
     """
     Get current user information
     """
-    from app.utils.auth import get_current_user
     return current_user
