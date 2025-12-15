@@ -9,6 +9,7 @@ function PortfolioDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddAsset, setShowAddAsset] = useState(false);
+  const [updating, setUpdating] = useState(false);
   const [newAsset, setNewAsset] = useState({
     symbol: '',
     name: '',
