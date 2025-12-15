@@ -30,7 +30,7 @@ I file aggiornati (`frontend/Dockerfile.production` e `docker-compose.coolify.ym
    SECRET_KEY=una_chiave_segreta_random_32_caratteri
    
    # App URL (IMPORTANTE: l'URL dove sarà raggiungibile la tua app)
-   REACT_APP_API_URL=https://tua-app.tuo-dominio.com/api
+   REACT_APP_API_URL=https://tua-app.tuo-dominio.com
    
    # Altre opzioni
    ENVIRONMENT=production

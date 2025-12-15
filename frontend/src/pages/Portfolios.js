@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { portfolioAPI } from '../api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 function Portfolios() {
   const [portfolios, setPortfolios] = useState([]);
@@ -9,6 +10,7 @@ function Portfolios() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchPortfolios();
@@ -19,7 +21,7 @@ function Portfolios() {
       const response = await portfolioAPI.list();
       setPortfolios(response.data);
     } catch (err) {
-      setError('Failed to load portfolios');
+      setError(t('failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -32,7 +34,7 @@ function Portfolios() {
 
     try {
       await portfolioAPI.create(formData);
-      setSuccess('Portfolio created successfully!');
+      setSuccess(t('successCreated'));
       setFormData({ name: '', description: '' });
       setShowForm(false);
       fetchPortfolios();
@@ -42,28 +44,35 @@ function Portfolios() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this portfolio?')) {
+    if (!window.confirm(t('areYouSureDelete'))) {
       return;
     }
 
     try {
       await portfolioAPI.delete(id);
-      setSuccess('Portfolio deleted successfully');
+      setSuccess(t('successDeleted'));
       fetchPortfolios();
     } catch (err) {
       setError('Failed to delete portfolio');
     }
   };
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return (
+    <div className="main-content">
+      <div className="container" style={{ textAlign: 'center', marginTop: '50px' }}>
+        <div className="loading-spinner"></div>
+        <p>{t('loading')}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="main-content">
       <div className="container">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1>Portfolios</h1>
+          <h1>{t('portfolios')}</h1>
           <button onClick={() => setShowForm(!showForm)} className="btn btn-primary">
-            {showForm ? 'Cancel' : '+ New Portfolio'}
+            {showForm ? t('cancel') : t('newPortfolio')}
           </button>
         </div>
 
@@ -72,10 +81,10 @@ function Portfolios() {
 
         {showForm && (
           <div className="card">
-            <h2>Create New Portfolio</h2>
+            <h2>{t('createNewPortfolio')}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Portfolio Name</label>
+                <label>{t('portfolioName')}</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -85,7 +94,7 @@ function Portfolios() {
               </div>
 
               <div className="form-group">
-                <label>Description (optional)</label>
+                <label>{t('description')}</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -94,7 +103,7 @@ function Portfolios() {
               </div>
 
               <button type="submit" className="btn btn-primary">
-                Create Portfolio
+                {t('createPortfolio')}
               </button>
             </form>
           </div>
@@ -102,17 +111,17 @@ function Portfolios() {
 
         <div className="card">
           {portfolios.length === 0 ? (
-            <p style={{ textAlign: 'center', color: '#666' }}>No portfolios yet. Create one to get started!</p>
+            <p style={{ textAlign: 'center', color: '#666' }}>{t('noPortfolios')}</p>
           ) : (
             <table className="table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Assets</th>
-                  <th>Value</th>
-                  <th>Gain/Loss</th>
-                  <th>Actions</th>
+                  <th>{t('name')}</th>
+                  <th>{t('description')}</th>
+                  <th>{t('assets')}</th>
+                  <th>{t('value')}</th>
+                  <th>{t('gainLoss')}</th>
+                  <th>{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,7 +145,7 @@ function Portfolios() {
                         className="btn btn-danger"
                         style={{ padding: '5px 10px', fontSize: '14px' }}
                       >
-                        Delete
+                        {t('delete')}
                       </button>
                     </td>
                   </tr>

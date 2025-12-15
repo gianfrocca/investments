@@ -12,6 +12,8 @@ import Import from './pages/Import';
 import Backup from './pages/Backup';
 import Header from './components/Header';
 
+import { LanguageProvider } from './contexts/LanguageContext';
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
@@ -38,82 +40,84 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className="App">
-        {isAuthenticated && <Header user={user} onLogout={handleLogout} />}
+    <LanguageProvider>
+      <Router>
+        <div className="App">
+          {isAuthenticated && <Header user={user} onLogout={handleLogout} />}
 
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              isAuthenticated ?
-              <Navigate to="/dashboard" /> :
-              <Login onLogin={handleLogin} />
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              isAuthenticated ?
-              <Navigate to="/dashboard" /> :
-              <Register onRegister={handleLogin} />
-            }
-          />
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                isAuthenticated ?
+                  <Navigate to="/dashboard" /> :
+                  <Login onLogin={handleLogin} />
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                isAuthenticated ?
+                  <Navigate to="/dashboard" /> :
+                  <Register onRegister={handleLogin} />
+              }
+            />
 
-          {/* Protected routes */}
-          <Route
-            path="/dashboard"
-            element={
-              isAuthenticated ?
-              <Dashboard /> :
-              <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/portfolios"
-            element={
-              isAuthenticated ?
-              <Portfolios /> :
-              <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/portfolio/:id"
-            element={
-              isAuthenticated ?
-              <PortfolioDetail /> :
-              <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/asset/:id"
-            element={
-              isAuthenticated ?
-              <AssetDetail /> :
-              <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/import"
-            element={
-              isAuthenticated ?
-              <Import /> :
-              <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/backup"
-            element={
-              isAuthenticated ?
-              <Backup /> :
-              <Navigate to="/login" />
-            }
-          />
+            {/* Protected routes */}
+            <Route
+              path="/dashboard"
+              element={
+                isAuthenticated ?
+                  <Dashboard /> :
+                  <Navigate to="/login" />
+              }
+            />
+            <Route
+              path="/portfolios"
+              element={
+                isAuthenticated ?
+                  <Portfolios /> :
+                  <Navigate to="/login" />
+              }
+            />
+            <Route
+              path="/portfolio/:id"
+              element={
+                isAuthenticated ?
+                  <PortfolioDetail /> :
+                  <Navigate to="/login" />
+              }
+            />
+            <Route
+              path="/asset/:id"
+              element={
+                isAuthenticated ?
+                  <AssetDetail /> :
+                  <Navigate to="/login" />
+              }
+            />
+            <Route
+              path="/import"
+              element={
+                isAuthenticated ?
+                  <Import /> :
+                  <Navigate to="/login" />
+              }
+            />
+            <Route
+              path="/backup"
+              element={
+                isAuthenticated ?
+                  <Backup /> :
+                  <Navigate to="/login" />
+              }
+            />
 
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </Routes>
-      </div>
-    </Router>
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </div>
+      </Router>
+    </LanguageProvider>
   );
 }
 
