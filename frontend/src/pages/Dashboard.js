@@ -17,8 +17,16 @@ function Dashboard() {
   const fetchPortfolios = async () => {
     try {
       const response = await portfolioAPI.list();
-      setPortfolios(response.data);
+      console.log('API Response:', response); // Debug log
+      if (Array.isArray(response.data)) {
+        setPortfolios(response.data);
+      } else {
+        console.error('Expected array but got:', response.data);
+        setPortfolios([]);
+        setError(t('failedToLoad') + ': Invalid data format');
+      }
     } catch (err) {
+      console.error('Error fetching portfolios:', err);
       setError(t('failedToLoad'));
     } finally {
       setLoading(false);
@@ -26,6 +34,8 @@ function Dashboard() {
   };
 
   const calculateTotals = () => {
+    if (!Array.isArray(portfolios)) return { totalValue: 0, totalInvested: 0, totalGainLoss: 0 };
+
     return portfolios.reduce(
       (acc, portfolio) => {
         if (portfolio.stats) {

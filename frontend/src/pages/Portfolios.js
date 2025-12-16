@@ -19,8 +19,15 @@ function Portfolios() {
   const fetchPortfolios = async () => {
     try {
       const response = await portfolioAPI.list();
-      setPortfolios(response.data);
+      if (Array.isArray(response.data)) {
+        setPortfolios(response.data);
+      } else {
+        console.error('Expected array but got:', response.data);
+        setPortfolios([]);
+        setError(t('failedToLoad') + ': Invalid data format');
+      }
     } catch (err) {
+      console.error('Error fetching portfolios:', err);
       setError(t('failedToLoad'));
     } finally {
       setLoading(false);
